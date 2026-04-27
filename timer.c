@@ -30,7 +30,7 @@ void Init_Interrupt_Pin(void) {
 
    // reset pins to LOW
   	GPIOA -> BRR = (WAVEFORM_OUT
-  			           | IN_ISR);
+  			           | ISR_TIMING_BIT);
 }
 
 
@@ -62,7 +62,7 @@ void setup_MCO_CLK(void) {
 // Note: if square wave not output, press reset button on nucleo board
 void TIM2_IRQHandler(void) {
 	// Turn on ISR timing GPIO pin
-	GPIOA -> ODR |= IN_ISR;
+	GPIOA -> ODR |= ISR_TIMING_BIT;
    if (TIM2->SR & TIM_SR_CC1IF) {      // triggered by CCR1 event ...
       TIM2->SR &= ~(TIM_SR_CC1IF);     // manage the flag
       // Increment capture and compare register
@@ -74,7 +74,7 @@ void TIM2_IRQHandler(void) {
       TIM2->SR &= ~(TIM_SR_UIF);       // manage the flag
    }
    // Turn off ISR timing GPIO pin
-   GPIOA -> ODR &= ~ IN_ISR;
+   GPIOA -> ODR &= ~ ISR_TIMING_BIT;
 }
 
 
