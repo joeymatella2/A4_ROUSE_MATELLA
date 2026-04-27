@@ -11,10 +11,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 #define WAVEFORM_OUT GPIO_PIN_5
-#define IN_ISR GPIO_PIN_6
+#define ISR_TIMING_BIT GPIO_PIN_6
 
 // 800 cycle period corresponds to 5 kHz
-#define PERIOD 800
+// Lowest period without breaking is 146
+#define PERIOD 146
 
 #define DUTY_CYCLE 400
 
