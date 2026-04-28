@@ -52,7 +52,7 @@ void stop_TIM2(void) {
    TIM2->DIER &= ~(TIM_DIER_CC1IE | TIM_DIER_UIE);  // disable event gen, rcv CCR1
 }
 
-int readCount_TIM2(void) {
+uint32_t readCount_TIM2(void) {
 	return TIM2->CNT;
 }
 
@@ -62,7 +62,7 @@ void setup_MCO_CLK(void) {
    // configure MCO output on PA8
    RCC->AHB2ENR   |=  (RCC_AHB2ENR_GPIOAEN);
    GPIOA->MODER   &= ~(GPIO_MODER_MODE8);    	// clear MODER bits to set ...
-   GPIOA->MODER   |=  (GPIO_MODER_MODE8_1);	// MODE = alternate function
+   GPIOA->MODER   |=  (GPIO_MODER_MODE8_1);	   // MODE = alternate function
    GPIOA->OTYPER  &= ~(GPIO_OTYPER_OT8);     	// push-pull output
    GPIOA->PUPDR   &= ~(GPIO_PUPDR_PUPD8);    	// pullup & pulldown OFF
    GPIOA->OSPEEDR |=  (GPIO_OSPEEDR_OSPEED8);   // high speed
@@ -73,13 +73,12 @@ void setup_MCO_CLK(void) {
 void TIM2_IRQHandler(void) {
    if (TIM2->SR & TIM_SR_CC1IF) {      // triggered by CCR1 event ...
       TIM2->SR &= ~(TIM_SR_CC1IF);     // manage the flag
-      currentState = RESET_STATE;
+      current_state = STATE_RESET;
       stop_TIM2();
    }
    if (TIM2->SR & TIM_SR_UIF) {        // triggered by ARR event ...
       TIM2->SR &= ~(TIM_SR_UIF);       // manage the flag
    }
-
 }
 
 
