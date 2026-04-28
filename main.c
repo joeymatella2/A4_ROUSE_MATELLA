@@ -130,10 +130,8 @@ int main(void)
 	  		LCD_Clear();
 	  		LCD_Set_Cursor(0, 0);
 	  		LCD_Write_String("Watch For LED");
+	  		// Generate random number for delay
 	  		uint32_t rand_delay = RNG_Read();
-	  		if (rand_delay == 0) {
-	  			rand_delay = 1000000;
-	  		}
 	  		delay_us(rand_delay);
 	  		// If button held down before LED press, cheat detected
 	  		button_input = BUTTON_PRESSED();
@@ -157,7 +155,7 @@ int main(void)
 	  		   	  button_input = BUTTON_PRESSED();
 	  		     }
 	  		     // Debounce
-	  		     delay_us(5000);
+	  		     delay_us(10000);
 	  		     current_state = STATE_UPDATE;
 	  		    }
 	  		break;
@@ -175,13 +173,13 @@ int main(void)
 	  		  		LCD_Set_Cursor(0, 0);
 	  		  		LCD_Write_String("YOU ARE A CHEAT!");
 	  		  		LCD_Set_Cursor(1, 0);
-	  		  		delay_us(1000000);
+	  		  		delay_us(2000000);
 		  		     // Wait for button to be released
 		  		     while(button_input) {
 		  		   	  button_input = BUTTON_PRESSED();
 		  		     }
 		  		     // Debounce
-		  		     delay_us(5000);
+		  		     delay_us(10000);
 	  		  		current_state = STATE_RESET;
 	  		  		break;
 	  	default:
@@ -243,7 +241,7 @@ uint32_t RNG_Read(void) {
 	        ; // nop
 	    }
 	    uint32_t uiRand = RNG->DR;    // 32-bit RN.
-	    uiRand = (uiRand % 4000001U) + 1000000U; // scale number
+	    uiRand = (uiRand % 4000001U) + 1000000U; // scale number (1 - 5 seconds)
 	    return uiRand;
 }
 
