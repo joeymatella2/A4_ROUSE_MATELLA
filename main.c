@@ -131,6 +131,9 @@ int main(void)
 	  		LCD_Set_Cursor(0, 0);
 	  		LCD_Write_String("Watch For LED");
 	  		uint32_t rand_delay = RNG_Read();
+	  		if (rand_delay == 0) {
+	  			rand_delay = 1000000;
+	  		}
 	  		delay_us(rand_delay);
 	  		// If button held down before LED press, cheat detected
 	  		button_input = BUTTON_PRESSED();
@@ -226,18 +229,22 @@ bool BUTTON_PRESSED(void) {
 void RNG_Init(void) {
 	// Enable clock
 	RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN;
+	// Enable external peripheral clock
+	RCC->CRRCR |= RCC_CRRCR_HSI48ON;
+	// Select clock source
+	RCC->CCIPR &= ~RCC_CCIPR_CLK48SEL;
 	// Enable random number generator
 	RNG->CR |= RNG_CR_RNGEN;
 }
 
 uint32_t RNG_Read(void) {
-	while (1) {
+		RCC->CRRCR |= RCC_CRRCR_HSI48ON;
 	    while ((RNG->SR & RNG_SR_DRDY) == 0) {
 	        ; // nop
 	    }
 	    uint32_t uiRand = RNG->DR;    // 32-bit RN.
+	    uiRand = (uiRand % 4000001U) + 1000000U; // scale number
 	    return uiRand;
-	}
 }
 
 
