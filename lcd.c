@@ -105,7 +105,7 @@ void LCD_Command( uint8_t command ) {
 
    if (( command == LCD_CLEAR_DISPLAY ) ||
        ( command == LCD_RETURN_HOME )) {
-      delay_ms( 3U );
+      delay_us( 3000U );
    }
    else {
       delay_us( 50U );
@@ -173,7 +173,7 @@ void LCD_Set_Cursor( uint8_t row, uint8_t col ) {
  * -------------------------------------------------------------------------- */
 void LCD_Clear( void ) {
    LCD_Command( LCD_CLEAR_DISPLAY );
-   delay_ms( 3U );
+   delay_us( 3000U );
 }
 
 /* -----------------------------------------------------------------------------
@@ -227,10 +227,10 @@ void LCD_Init( void ) {
 
    LCD_Status_LED_Config();
 
-   delay_ms( 40U );
+   delay_us( 40000U );
 
    LCD_4b_Command( 0x30U );
-   delay_ms( 5U );
+   delay_us( 5000U );
 
    LCD_4b_Command( 0x30U );
    delay_us( 200U );
@@ -247,3 +247,4 @@ void LCD_Init( void ) {
    LCD_Command( LCD_ENTRY_MODE );
    LCD_Command( LCD_DISPLAY_ON );
 }
+
