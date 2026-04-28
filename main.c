@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "lcd.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -42,7 +43,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static volatile button_state_t current_state = STATE_RESET;
+volatile button_state_t current_state = STATE_RESET;
 static uint32_t clock_ticks = 0;
 static uint32_t final_time = 0;
 /* USER CODE END PV */
@@ -57,53 +58,6 @@ void run_fsm(uint8_t button_input);
 /* USER CODE BEGIN 0 */
 
 
-void run_fsm(uint8_t button_input) {
-	switch (current_state) {
-	
-	case STATE_RESET:
-		LED_OFF();
-		//set LCD screen to "PUSH SW TO TRIG"
-		if (button_input) {
-			current_state = STATE_DELAY;
-		}
-		break;
-		
-	case STATE_DELAY:
-		clock_ticks = 0;
-		final_time = 0;
-		//set LCD screen to "watch for LED"
-		//generate random number
-		//delay(random_num)
-		current_state = STATE_TIME;
-		break;
-		
-		
-	case STATE_TIME:
-		//start_TIM2(void);
-		LED_ON();
-		if (button_input) {
-			//stop_TIM2(void);
-			//clock_ticks = readCount_TIM2(void);
-			current_state = STATE_UPDATE;
-		}
-		break;
-		
-		
-	case STATE_UPDATE:
-		LED_OFF();
-		// time = count/4M
-		// update LCD with time "your reaction time is blank"
-		current_state = STATE_RESET;
-		break;
-		
-		
-	default:
-		current_state = STATE_RESET;
-		break;
-		
-		
-	}
-}
 /* USER CODE END 0 */
 
 /**
@@ -138,13 +92,89 @@ int main(void)
   Init_Interupt_Pin();
   setup_MCO_CLK();
   setup_TIM2();
+  LCD_Init(); 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  run_fsm(BUTTON_PRESSED());
+	  uint8_t button_input = BUTTON_PRESSED();
+	  switch (current_state) {
+	  	
+	  	case STATE_RESET:
+	  		LED_OFF();
+	  		LCD_Set_Cursor(0, 0);
+	  		LCD_Write_String("PUSH SW TO TRIG");
+	  		LCD_Set_Cursor(1, 0);
+	  		LCD_Write_String("TIME: ");
+	  		LCD_Write_Number(final_time);
+	  		LCD_Write_String(" s");
+	  		current_state = STATE_WAIT_FOR_START;
+	  		break;
+	  		
+	  	case STATE_WAIT_FOR_START:
+	  		if (button_input) {
+	  			current_state = STATE_DELAY;
+	  		}
+	  		break;
+	  		
+	  	case STATE_DELAY:
+	  		LCD_Clear();
+	  		LCD_Set_Cursor(0, 0);
+	  		LCD_Write_String("Watch For LED");
+	  		//generate random number
+	  		//delay(random_num)
+	  		if (button_input) {
+	  			current_state = STATE_CHEAT;
+	  		}
+	  		else {
+	  			start_TIM2();
+	  			LED_ON();
+	  			current_state = STATE_TIME;
+	  			}
+	  		break;
+	  		
+	  		
+	  	case STATE_TIME:
+	  		if (button_input) {
+	  		    stop_TIM2();
+	  		     clock_ticks = readCount_TIM2();
+	  		     current_state = STATE_WAIT_RELEASE;   // capture time, then wait for release
+	  		    }
+	  		break;
+	  		    
+	  	case STATE_WAIT_RELEASE:
+	  	    if (!button_input) {                       // button is now released
+	  	   	 	 //delay of .1 second
+	  	   	 	 current_state = STATE_UPDATE;
+	  	    }
+	  	    break;   
+	  		
+	  		
+	  	case STATE_UPDATE:
+	  		LED_OFF();
+	  		final_time = clock_ticks / 4000000;
+	  		//delay
+	  		current_state = STATE_RESET;
+	  		break;
+	  		
+	  	case STATE_CHEAT:
+	  		  		LCD_Clear();
+	  		  		LCD_Set_Cursor(0, 0);
+	  		  		LCD_Write_String("YOU ARE A CHEATER BRO");
+	  		  		LCD_Set_Cursor(1, 0);
+	  		  		//delay
+	  		  		current_state = STATE_RESET;
+	  		  		break;
+	  		
+	  		
+	  	default:
+	  		current_state = STATE_RESET;
+	  		break;
+	  		
+	  		
+	  	}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
