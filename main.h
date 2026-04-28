@@ -43,8 +43,13 @@ typedef enum {
     STATE_RESET,
     STATE_DELAY,
     STATE_TIME,
-    STATE_UPDATE
+    STATE_UPDATE,
+	 STATE_CHEAT
 } button_state_t;
+
+extern volatile button_state_t current_state;
+
+typedef int bool;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -57,15 +62,19 @@ typedef enum {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-#define BUTTON_PRESSED()  (HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN) == GPIO_PIN_RESET)
-#define LED_ON()          HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET)
-#define LED_OFF()         HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET)
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void PB_Init(void);
+void LED_Init(void);
+void LED_ON(void);
+void LED_OFF(void);
+bool BUTTON_PRESSED(void);
+void RNG_Init(void);
+uint32_t RNG_Read(void);
 
 /* USER CODE END EFP */
 
