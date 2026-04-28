@@ -47,7 +47,7 @@ void TIM2_IRQHandler(void);
 void setup_MCO_CLK(void);
 void start_TIM2(void);
 void stop_TIM2(void);
-int readCount_TIM2(void);
+uint32_t readCount_TIM2(void);
 
 
 #endif /* INC_TIMER_H_ */
