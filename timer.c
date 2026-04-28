@@ -31,34 +31,6 @@
 #include "timer.h"
 #include "main.h"
 
-void Init_Interrupt_Pin(void) {
-
-	RCC -> AHB2ENR |= (RCC_AHB2ENR_GPIOAEN);
-
-  	/* Configure GPIO pins 5 and 6 as outputs, push-pull, very high speed,
-  	 * no pull-up or pull-down
-  	 */
-  	GPIOA -> MODER &= ~(GPIO_MODER_MODE5
-  			              | GPIO_MODER_MODE6);
-
-  	GPIOA -> MODER |= (GPIO_MODER_MODE5_0
-  			             | GPIO_MODER_MODE6_0);
-
-  	GPIOA -> OTYPER  &= ~(GPIO_OTYPER_OT5
-  			                 | GPIO_OTYPER_OT6);
-
-  	GPIOA -> OSPEEDR |= (GPIO_OSPEEDR_OSPEED5
-  			               | GPIO_OSPEEDR_OSPEED6);
-
-  	GPIOA -> PUPDR &= ~(GPIO_PUPDR_PUPD5
-  			               | GPIO_PUPDR_PUPD6);
-
-   // reset pins to LOW
-  	GPIOA -> BRR = (WAVEFORM_OUT
-  			           | ISR_TIMING_BIT);
-}
-
-
 void setup_TIM2(void) {
    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;           // enable clock for TIM2
    TIM2->ARR = 0xFFFFFFFF;                         // Set ARR to max
