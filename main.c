@@ -19,10 +19,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "lcd.h"
+#include "delay.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+volatile button_state_t current_state = STATE_RESET;
+static uint32_t clock_ticks = 0;
+static uint32_t final_time = 0;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,7 +35,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,20 +45,16 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile button_state_t current_state = STATE_RESET;
-static uint32_t clock_ticks = 0;
-static uint32_t final_time = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-void run_fsm(uint8_t button_input);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 
 /* USER CODE END 0 */
 
@@ -84,103 +82,166 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  SysTick_Init();
+  setup_MCO_CLK();
+  setup_TIM2();
+  LCD_Init();
+  PB_Init();
+  LED_Init();
+  RNG_Init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-  Init_Interupt_Pin();
-  setup_MCO_CLK();
-  setup_TIM2();
-  LCD_Init(); 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* USER CODE END WHILE */
 	  uint8_t button_input = BUTTON_PRESSED();
 	  switch (current_state) {
-	  	
+
 	  	case STATE_RESET:
 	  		LED_OFF();
+	  		LCD_Clear();
 	  		LCD_Set_Cursor(0, 0);
 	  		LCD_Write_String("PUSH SW TO TRIG");
 	  		LCD_Set_Cursor(1, 0);
 	  		LCD_Write_String("TIME: ");
-	  		LCD_Write_Number(final_time);
+	  		LCD_Write_Digit((final_time / 1000) % 10);
+	  		LCD_Write_String(".");
+	  		LCD_Write_Digit((final_time / 100) % 10);
+	  		LCD_Write_Digit((final_time / 10) % 10);
+	  		LCD_Write_Digit((final_time) % 10);
+
 	  		LCD_Write_String(" s");
-	  		current_state = STATE_WAIT_FOR_START;
-	  		break;
-	  		
-	  	case STATE_WAIT_FOR_START:
-	  		if (button_input) {
-	  			current_state = STATE_DELAY;
+	  		// Poll button press
+	  		while (!button_input) {
+	  			button_input = BUTTON_PRESSED();
 	  		}
+	  		// Button pressed, go to delay state
+	  		current_state = STATE_DELAY;
 	  		break;
-	  		
+
 	  	case STATE_DELAY:
 	  		LCD_Clear();
 	  		LCD_Set_Cursor(0, 0);
 	  		LCD_Write_String("Watch For LED");
-	  		//generate random number
-	  		//delay(random_num)
+	  		uint32_t rand_delay = RNG_Read();
+	  		delay_us(rand_delay);
+	  		// If button held down before LED press, cheat detected
+	  		button_input = BUTTON_PRESSED();
 	  		if (button_input) {
 	  			current_state = STATE_CHEAT;
-	  		}
-	  		else {
+	  		} else {
 	  			start_TIM2();
 	  			LED_ON();
 	  			current_state = STATE_TIME;
-	  			}
+	  		}
 	  		break;
-	  		
-	  		
+
+
 	  	case STATE_TIME:
+	  		// Poll button press
 	  		if (button_input) {
-	  		    stop_TIM2();
+	  		     stop_TIM2();
 	  		     clock_ticks = readCount_TIM2();
-	  		     current_state = STATE_WAIT_RELEASE;   // capture time, then wait for release
+	  		     // Wait for button to be released
+	  		     while(button_input) {
+	  		   	  button_input = BUTTON_PRESSED();
+	  		     }
+	  		     // Debounce
+	  		     delay_us(5000);
+	  		     current_state = STATE_UPDATE;
 	  		    }
 	  		break;
-	  		    
-	  	case STATE_WAIT_RELEASE:
-	  	    if (!button_input) {                       // button is now released
-	  	   	 	 //delay of .1 second
-	  	   	 	 current_state = STATE_UPDATE;
-	  	    }
-	  	    break;   
-	  		
-	  		
+
 	  	case STATE_UPDATE:
 	  		LED_OFF();
-	  		final_time = clock_ticks / 4000000;
-	  		//delay
+	  		// Time in miliseconds
+	  		final_time = clock_ticks / 4000;
+
 	  		current_state = STATE_RESET;
 	  		break;
-	  		
+
 	  	case STATE_CHEAT:
 	  		  		LCD_Clear();
 	  		  		LCD_Set_Cursor(0, 0);
-	  		  		LCD_Write_String("YOU ARE A CHEATER BRO");
+	  		  		LCD_Write_String("YOU ARE A CHEAT!");
 	  		  		LCD_Set_Cursor(1, 0);
-	  		  		//delay
+	  		  		delay_us(1000000);
+		  		     // Wait for button to be released
+		  		     while(button_input) {
+		  		   	  button_input = BUTTON_PRESSED();
+		  		     }
+		  		     // Debounce
+		  		     delay_us(5000);
 	  		  		current_state = STATE_RESET;
 	  		  		break;
-	  		
-	  		
 	  	default:
 	  		current_state = STATE_RESET;
 	  		break;
-	  		
-	  		
-	  	}
-    /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
+}
+
+  // Configure GPIO_PIN_13 GPIOC as button input
+void PB_Init(void) {
+	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOCEN);
+	BUTTON_PORT->MODER &= ~(GPIO_MODER_MODE13);
+	BUTTON_PORT->PUPDR &= ~(GPIO_PUPDR_PUPD13);
+	BUTTON_PORT->PUPDR |= (GPIO_PUPDR_PUPD13_1);
+}
+// GPIO B pin 7 as LED
+void LED_Init(void) {
+	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOBEN);
+	LED_PORT->MODER &= ~(GPIO_MODER_MODE7);
+	LED_PORT->MODER |= (GPIO_MODER_MODE7_0);
+	LED_PORT->OTYPER &= ~(GPIO_OTYPER_OT7);
+	LED_PORT->PUPDR &= ~(GPIO_PUPDR_PUPD7);
+	LED_PORT->OSPEEDR |= (GPIO_OSPEEDR_OSPEED7);
+
+	// Reset Pin
+	LED_PORT->BRR |= (LED_PIN);
+}
+
+void LED_ON(void) {
+	LED_PORT->BSRR |= (LED_PIN);
+}
+
+void LED_OFF(void) {
+	LED_PORT->BRR |= (LED_PIN);
+}
+
+bool BUTTON_PRESSED(void) {
+	// Button is active low
+	return ((BUTTON_PORT->IDR >> 13) & 1);
+}
+
+void RNG_Init(void) {
+	// Enable clock
+	RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN;
+	// Enable random number generator
+	RNG->CR |= RNG_CR_RNGEN;
+}
+
+uint32_t RNG_Read(void) {
+	while (1) {
+	    while ((RNG->SR & RNG_SR_DRDY) == 0) {
+	        ; // nop
+	    }
+	    uint32_t uiRand = RNG->DR;    // 32-bit RN.
+	    return uiRand;
+	}
+}
+
+
+
 
 /**
   * @brief System Clock Configuration
