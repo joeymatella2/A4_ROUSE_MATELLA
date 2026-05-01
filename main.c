@@ -122,7 +122,6 @@ int main(void)
     /* USER CODE END WHILE */
 	  // read current pushbutton state once per loop iteration
 	  uint8_t button_input = BUTTON_PRESSED();
-	  uint8_t button_input = BUTTON_PRESSED();
 	  switch (current_state) {
 
 	  // reset state:
