@@ -1,20 +1,36 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+/*
+ *******************************************************************************
+ * @file           : main.c
+ * @brief          : main program for EE 329 Assignment 4 reaction timer
+ * project         : EE 329 S'26 A4
+ * authors         : Joseph Matella and Gabriel Rouse
+ * version         : 1.0
+ * date            : 20260430
+ * compiler        : STM32CubeIDE v.1.19.0 Build: 14980_20230301_1550 (UTC)
+ * target          : NUCLEO-L4A6ZG
+ * clocks          : 4 MHz MSI to AHB2
+ * @attention      : (c) 2026 STMicroelectronics. All rights reserved.
+ *******************************************************************************
+ * Description:
+ * Main application for the reaction timer assignment. Initializes the system
+ * clock, LCD, delay functions, button input, LED output, RNG, MCO output, and
+ * TIM2. Implements the reaction timer state machine with RESET, DELAY, TIME,
+ * UPDATE, and CHEAT states.
+ *
+ *******************************************************************************
+ * GPIO Wiring
+ * |   Component    | GPIO Identifier | Connector Location | Config
+ *-----------------------------------------------------------------------------
+ * | Pushbutton     | PC13            | User Button        | IN
+ * | Reaction LED   | PB7             | GPIO output        | OUT
+ * | MCO Clock Out  | PA8             | CN10-23            | AF0
+ *******************************************************************************
+ * Version History
+ *  Ver.|   Date   |  Description
+ *  ---------------------------------------------------------------------------
+ *  1.0 | 20260430 | Finalized reaction timer main program for A4
+ *******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -62,6 +78,10 @@ void SystemClock_Config(void);
   * @brief  The application entry point.
   * @retval int
   */
+// main program entry point.
+// initializes clocks, peripherals, lcd, rng, and timer modules.
+// runs the reaction timer state machine forever.
+int main(void)
 int main(void)
 {
 
@@ -101,9 +121,14 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  // read current pushbutton state once per loop iteration
+	  uint8_t button_input = BUTTON_PRESSED();
 	  uint8_t button_input = BUTTON_PRESSED();
 	  switch (current_state) {
 
+	  // reset state:
+	  // turn LED off, show prompt, and display the previous reaction time.
+	  // wait here until the user presses the button to begin a new trial.
 	  	case STATE_RESET:
 	  		LED_OFF();
 	  		LCD_Clear();
@@ -125,7 +150,10 @@ int main(void)
 	  		// Button pressed, go to delay state
 	  		current_state = STATE_DELAY;
 	  		break;
-
+	  		// delay state:
+	  		// display standby message and wait a random amount of time before
+	  		// turning on the LED. if the button is pressed during this delay,
+	  		// treat it as cheating.
 	  	case STATE_DELAY:
 	  		LCD_Clear();
 	  		LCD_Set_Cursor(0, 0);
@@ -144,7 +172,9 @@ int main(void)
 	  		}
 	  		break;
 
-
+	  		// timing state:
+	  		// once the LED is on and TIM2 is running, wait for the user to press
+	  		// the button. when pressed, stop the timer and save the elapsed count.
 	  	case STATE_TIME:
 	  		// Poll button press
 	  		if (button_input) {
@@ -159,7 +189,9 @@ int main(void)
 	  		     current_state = STATE_UPDATE;
 	  		    }
 	  		break;
-
+	  		// update state:
+	  		// convert raw timer counts into milliseconds and save the result
+	  		// for display during the next reset state.
 	  	case STATE_UPDATE:
 	  		LED_OFF();
 	  		// Time in miliseconds
@@ -167,7 +199,9 @@ int main(void)
 
 	  		current_state = STATE_RESET;
 	  		break;
-
+	  		// cheat state:
+	  		// if the button is pressed before the LED turns on, display a
+	  		// cheating message, wait briefly, then return to reset.
 	  	case STATE_CHEAT:
 	  		  		LCD_Clear();
 	  		  		LCD_Set_Cursor(0, 0);
@@ -191,14 +225,24 @@ int main(void)
 }
 }
 
-  // Configure GPIO_PIN_13 GPIOC as button input
+/* -----------------------------------------------------------------------------
+ * function : PB_Init()
+ * INs      : none
+ * OUTs     : none
+ * action   : configures PC13 as a digital input for the user pushbutton
+ * -------------------------------------------------------------------------- */
 void PB_Init(void) {
 	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOCEN);
 	BUTTON_PORT->MODER &= ~(GPIO_MODER_MODE13);
 	BUTTON_PORT->PUPDR &= ~(GPIO_PUPDR_PUPD13);
 	BUTTON_PORT->PUPDR |= (GPIO_PUPDR_PUPD13_1);
 }
-// GPIO B pin 7 as LED
+/* -----------------------------------------------------------------------------
+ * function : LED_Init()
+ * INs      : none
+ * OUTs     : none
+ * action   : configures PB7 as a push-pull digital output for the reaction LED
+ * -------------------------------------------------------------------------- */
 void LED_Init(void) {
 	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOBEN);
 	LED_PORT->MODER &= ~(GPIO_MODER_MODE7);
@@ -210,20 +254,40 @@ void LED_Init(void) {
 	// Reset Pin
 	LED_PORT->BRR |= (LED_PIN);
 }
-
+/* -----------------------------------------------------------------------------
+ * function : LED_ON()
+ * INs      : none
+ * OUTs     : none
+ * action   : sets the LED output pin high to turn the reaction LED on
+ * -------------------------------------------------------------------------- */
 void LED_ON(void) {
 	LED_PORT->BSRR |= (LED_PIN);
 }
-
+/* -----------------------------------------------------------------------------
+ * function : LED_OFF()
+ * INs      : none
+ * OUTs     : none
+ * action   : clears the LED output pin to turn the reaction LED off
+ * -------------------------------------------------------------------------- */
 void LED_OFF(void) {
 	LED_PORT->BRR |= (LED_PIN);
 }
-
+/* -----------------------------------------------------------------------------
+ * function : BUTTON_PRESSED()
+ * INs      : none
+ * OUTs     : returns button state as bool
+ * action   : reads the pushbutton input and returns its current logic level
+ * -------------------------------------------------------------------------- */
 bool BUTTON_PRESSED(void) {
 	// Button is active low
 	return ((BUTTON_PORT->IDR >> 13) & 1);
 }
-
+/* -----------------------------------------------------------------------------
+ * function : RNG_Init()
+ * INs      : none
+ * OUTs     : none
+ * action   : enables the hardware random number generator and its 48 MHz clock
+ * -------------------------------------------------------------------------- */
 void RNG_Init(void) {
 	// Enable clock
 	RCC->AHB2ENR |= RCC_AHB2ENR_RNGEN;
@@ -234,12 +298,21 @@ void RNG_Init(void) {
 	// Enable random number generator
 	RNG->CR |= RNG_CR_RNGEN;
 }
-
+/* -----------------------------------------------------------------------------
+ * function : RNG_Read()
+ * INs      : none
+ * OUTs     : returns uint32_t random delay value
+ * action   : reads one random number from the RNG peripheral and scales it to
+ *            a delay range of 1,000,000 us to 5,000,000 us
+ * -------------------------------------------------------------------------- */
 uint32_t RNG_Read(void) {
-		RCC->CRRCR |= RCC_CRRCR_HSI48ON;
-	    while ((RNG->SR & RNG_SR_DRDY) == 0) {
+		RCC->CRRCR |= RCC_CRRCR_HSI48ON; /* make sure the 48 MHz clock source for RNG is enabled
+		*/
+	    while ((RNG->SR & RNG_SR_DRDY) == 0) { // wait until random data is ready
 	        ; // nop
 	    }
+	    // read one 32-bit random number from the data register
+	    // scale result to 1 to 5 seconds in microseconds
 	    uint32_t uiRand = RNG->DR;    // 32-bit RN.
 	    uiRand = (uiRand % 4000001U) + 1000000U; // scale number (1 - 5 seconds)
 	    return uiRand;
