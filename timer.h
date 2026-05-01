@@ -3,7 +3,7 @@
  * @file           : timer.h
  * @brief          : X
  * project         : EE 329 S'26 AX
- * authors         : joeym
+ * authors         : Gabriel Rouse and Joseph Matella
  * version         : 0.1
  * date            : Apr 27, 2026
  * compiler        : STM32CubeIDE v.1.19.0 Build: 14980_20230301_1550 (UTC)
@@ -22,18 +22,12 @@
  * Version History
  *  Ver.|   Date   |  Description
  *  ---------------------------------------------------------------------------
- *      |          | 
+ *      |          |
  *******************************************************************************
  *
  * Header format adapted from [Code Appendix by Kevin Vo] pg 5
  */
 
-/*
- * timer.h
- *
- *  Created on: Apr 24, 2026
- *      Author: joeym
- */
 
 #ifndef INC_TIMER_H_
 #define INC_TIMER_H_
@@ -47,8 +41,7 @@ void TIM2_IRQHandler(void);
 void setup_MCO_CLK(void);
 void start_TIM2(void);
 void stop_TIM2(void);
-uint32_t readCount_TIM2(void);
+int readCount_TIM2(void);
 
 
 #endif /* INC_TIMER_H_ */
-
