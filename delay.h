@@ -4,7 +4,7 @@
  * @brief          : header file for delay.h
  * masks and defines
  * project         : EE 329 S'26 A3
- * authors         : Joseph Matella and Tyler Ragasa
+ * authors         : Joseph Matella and Gabriel Rouse
  * version         : 0.1
  * date            : 20260421
  * compiler        : STM32CubeIDE v.1.19.0 Build: 14980_20230301_1550 (UTC)
