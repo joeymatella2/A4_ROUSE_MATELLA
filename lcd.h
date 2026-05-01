@@ -1,9 +1,9 @@
 /*
  *******************************************************************************
- * @file           : delay.h
- * @brief          : header file for delay.c
+ * @file           : lcd.h
+ * @brief          : header file for lcd.c
  * project         : EE 329 S'26 A4
- * authors         : Joseph Matella and Gabriel Rouse
+ * authors         : Gabriel Rouse and Joseph Matella
  * version         : 1.0
  * date            : 20260430
  * compiler        : STM32CubeIDE v.1.19.0 Build: 14980_20230301_1550 (UTC)
@@ -12,8 +12,8 @@
  * @attention      : (c) 2026 STMicroelectronics. All rights reserved.
  *******************************************************************************
  * Description:
- * Declares SysTick-based microsecond delay support functions used throughout
- * the reaction timer application.
+ * Defines GPIO mappings, LCD command values, and function prototypes for the
+ * 16x2 LCD module used in the reaction timer application.
  *
  *******************************************************************************
  * Header format adapted from [Code Appendix by Kevin Vo] pg 5
