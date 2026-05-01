@@ -3,7 +3,7 @@
  * @file           : delay.c
  * @brief          : keypad configuration functions and keypress detection functions
  * project         : EE 329 S'26 A3
- * authors         : Joseph Matella and Tyler Ragasa
+ * authors         : Joseph Matella and Gabriel Rouse
  * version         : 0.1
  * date            : 20260421
  * compiler        : STM32CubeIDE v.1.19.0 Build: 14980_20230301_1550 (UTC)
@@ -28,18 +28,24 @@
 * Citation: SysTick_Init and delay_us copied from Lab Manual, pg 15
 *-----------------------------------------------------------------------------
 */
-// configure SysTick timer for use with delay_us().
-// warning: breaks HAL_delay() by disabling interrupts for shorter delay timing.
+/* -----------------------------------------------------------------------------
+ * function : SysTick_Init()
+ * INs      : none
+ * OUTs     : none
+ * action   : configures SysTick for polling-based microsecond delay timing
+ * -------------------------------------------------------------------------- */
 void SysTick_Init(void) {
 	SysTick->CTRL |= (SysTick_CTRL_ENABLE_Msk |     	// enable SysTick Timer
                       SysTick_CTRL_CLKSOURCE_Msk); 	// select CPU clock
 	SysTick->CTRL &= ~(SysTick_CTRL_TICKINT_Msk);  	  // disable interrupt
 }
 
-// delay in microseconds using SysTick timer to count CPU clock cycles
-// do not call with 0 : error, maximum delay.
-// careful calling with small nums : results in longer delays than specified:
-//	   e.g. @4MHz, delay_us(1) = 10-15 us delay.
+/* -----------------------------------------------------------------------------
+ * function : delay_us()
+ * INs      : time_us = requested delay in microseconds
+ * OUTs     : none
+ * action   : generates a blocking delay in microseconds using SysTick counts
+ * -------------------------------------------------------------------------- */
 void delay_us(const uint32_t time_us) {
 	// set the counts for the specified delay
 	SysTick->LOAD = (uint32_t)((time_us * (SystemCoreClock / 1000000)) - 1);
@@ -47,5 +53,4 @@ void delay_us(const uint32_t time_us) {
 	SysTick->CTRL &= ~(SysTick_CTRL_COUNTFLAG_Msk);    	 // clear count flag
 	while (!(SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk)); // wait for flag
 }
-
 
