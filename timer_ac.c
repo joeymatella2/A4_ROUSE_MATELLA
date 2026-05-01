@@ -1,8 +1,34 @@
 /*
- * timer.c
+ *******************************************************************************
+ * @file           : timer.c
+ * @brief          : TIM2 waveform generation and ISR timing support for A4
+ * project         : EE 329 S'26 A4 Parts A-C
+ * authors         : Joseph Matella and Gabriel Rouse
+ * version         : 1.0
+ * date            : 20260430
+ * compiler        : STM32CubeIDE v.1.19.0 Build: 14980_20230301_1550 (UTC)
+ * target          : NUCLEO-L4A6ZG
+ * clocks          : 4 MHz MSI to AHB2
+ * @attention      : (c) 2026 STMicroelectronics. All rights reserved.
+ *******************************************************************************
+ * Description:
+ * Configures TIM2 for Parts A through C waveform generation experiments.
+ * Supports square-wave generation, ISR timing measurement, and MCO clock
+ * output for oscilloscope reference measurements.
  *
- *  Created on: Apr 24, 2026
- *      Author: joeym
+ *******************************************************************************
+ * GPIO Wiring
+ * |   Component       | GPIO Identifier | Connector Location | Config
+ *-----------------------------------------------------------------------------
+ * | Waveform Output   | PA5             | CN10-11            | OUT
+ * | ISR Timing Bit    | PA6             | CN10-13            | OUT
+ * | MCO Clock Out     | PA8             | CN10-23            | AF0
+ *******************************************************************************
+ * Version History
+ *  Ver.|   Date   |  Description
+ *  ---------------------------------------------------------------------------
+ *  1.0 | 20260430 | Finalized Parts A-C timer experiment module
+ *******************************************************************************
  */
 #include "timer.h"
 
