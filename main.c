@@ -82,7 +82,6 @@ void SystemClock_Config(void);
 // initializes clocks, peripherals, lcd, rng, and timer modules.
 // runs the reaction timer state machine forever.
 int main(void)
-int main(void)
 {
 
   /* USER CODE BEGIN 1 */
