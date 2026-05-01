@@ -4,7 +4,7 @@
 * @file    : lcd.c
 * @brief   : 16x2 parallel LCD driver in 4-bit write-only mode
 * project  : EE 329 Assignment 3
-* authors  : Gabriel Rouse
+* authors  : Gabriel Rouse and Joseph Matella
 * version  : 1.0
 * date     : 260420
 ******************************************************************************/
@@ -247,4 +247,3 @@ void LCD_Init( void ) {
    LCD_Command( LCD_ENTRY_MODE );
    LCD_Command( LCD_DISPLAY_ON );
 }
-
