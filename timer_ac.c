@@ -6,6 +6,13 @@
  */
 #include "timer.h"
 
+/* -----------------------------------------------------------------------------
+ * function : Init_Interrupt_Pin()
+ * INs      : none
+ * OUTs     : none
+ * action   : configures PA5 and PA6 as digital outputs for waveform output and
+ *            ISR timing measurement
+ * -------------------------------------------------------------------------- */
 void Init_Interrupt_Pin(void) {
 
 	RCC -> AHB2ENR |= (RCC_AHB2ENR_GPIOAEN);
@@ -34,7 +41,14 @@ void Init_Interrupt_Pin(void) {
 }
 
 
-void setup_TIM2( int iDutyCycle ) {
+/* -----------------------------------------------------------------------------
+ * function : setup_TIM2()
+ * INs      : iDutyCycle = initial compare value for CCR1
+ * OUTs     : none
+ * action   : configures TIM2 for waveform generation, enables TIM2 interrupts,
+ *            loads ARR and CCR1 values, and starts the timer
+ * -------------------------------------------------------------------------- */
+void setup_TIM2(int iDutyCycle) {
    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;           // enable clock for TIM2
    TIM2->DIER |= (TIM_DIER_CC1IE | TIM_DIER_UIE);  // enable event gen, rcv CCR1
    TIM2->ARR = 0xFFFFFFFF;                             // ARR = T = counts @4MHz
@@ -45,6 +59,13 @@ void setup_TIM2( int iDutyCycle ) {
    TIM2->CR1 |= TIM_CR1_CEN;                       // start TIM2 CR1
 }
 
+/* -----------------------------------------------------------------------------
+ * function : setup_MCO_CLK()
+ * INs      : none
+ * OUTs     : none
+ * action   : configures PA8 as MCO output and routes the 4 MHz system clock
+ *            to that pin for oscilloscope reference measurement
+ * -------------------------------------------------------------------------- */
 void setup_MCO_CLK(void) {
    // enable MCO, MCOSEL = 0b0001 to select SYSCLK = MSI (4 MHz source)
    RCC->CFGR = ((RCC->CFGR & ~(RCC_CFGR_MCOSEL)) | (RCC_CFGR_MCOSEL_0));
@@ -59,7 +80,13 @@ void setup_MCO_CLK(void) {
 }
 
 
-// Note: if square wave not output, press reset button on nucleo board
+/* -----------------------------------------------------------------------------
+ * function : TIM2_IRQHandler()
+ * INs      : none
+ * OUTs     : none
+ * action   : services TIM2 interrupts by toggling the waveform output at CCR1,
+ *            updating CCR1 for the next edge, and pulsing the ISR timing bit
+ * -------------------------------------------------------------------------- */
 void TIM2_IRQHandler(void) {
 	// Turn on ISR timing GPIO pin
 	GPIOA -> ODR |= ISR_TIMING_BIT;
